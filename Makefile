@@ -1,13 +1,22 @@
 CC=gcc
-CFLAGS=-I
-OUT=/out
-DEPS
+CFLAGS=-I -std=c99 -O2
+WARNING=-Wall
+OBJECT_DIR=out
+#OBJS := $(addprefix $(OBJECT_DIR)/,main.o )
+OBJS := main.c
 
-main: main.o
-	CC $OUT/main.o -o $OUT/main
 
-main.o: main.c
-	CC -c main.c -o $OUT/main.o
+
+#$(OBJECT_DIR)/%.o: %.c
+#	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(OBJECT_DIR)/main: $(OBJS)| $(OBJECT_DIR)
+	$(CC) -o $@ $^ $(CFLAGS) $(WARNING)
+
+#$(OBJS): | $(OBJECT_DIR)
+
+$(OBJECT_DIR):
+	mkdir $@
 
 clean:
-	ERASE $OUT
+	ERASE $(OBJECT_DIR)
