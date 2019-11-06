@@ -1,9 +1,10 @@
-CC=gcc
-CFLAGS=-I -std=c99 -O2
+CC=arm-none-eabi-gcc
 WARNING=-Wall
 OBJECT_DIR=out
 #OBJS := $(addprefix $(OBJECT_DIR)/,main.o )
 OBJS := main.c
+
+CFLAGS=-I -std=c99 -O2 -Xlinker -Map=$(OBJECT_DIR)/output.map 
 
 
 
@@ -19,4 +20,4 @@ $(OBJECT_DIR):
 	mkdir $@
 
 clean:
-	ERASE $(OBJECT_DIR)
+	rmdir /s /q $(OBJECT_DIR)
