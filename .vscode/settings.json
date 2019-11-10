@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "armcm3.h": "c",
+        "main.h": "c"
+    }
+}
