@@ -6,13 +6,13 @@ endif
 
 TARGET	= sensors
 WARNING	= -Wall
-OBJECT_DIR	= out
+OBJ_DIR	= out
 DEFINES = STM32F103
 MCU += -mcpu=cortex-m3
 
 #Source path
 #-------------------------------------------------------------------------------
-SOURCEDIRS := src
+SOURCEDIRS += src
 #-------------------------------------------------------------------------------
 
 #Header path
@@ -22,9 +22,9 @@ INCLUDES += inc
 
 #Toolchain
 #-------------------------------------------------------------------------------
-AS = arm-none-eabi-gcc
+AS = arm-none-eabi-as
 CC = arm-none-eabi-gcc
-LD = arm-none-eabi-g++
+LD = arm-none-eabi-gcc
 CP = arm-none-eabi-objcopy
 SZ = arm-none-eabi-size
 #-------------------------------------------------------------------------------
@@ -32,7 +32,7 @@ SZ = arm-none-eabi-size
 #GCC config
 #-------------------------------------------------------------------------------
 CFLAGS=-I -std=c99 -O2 -Xlinker \
-	-Map=$(OBJECT_DIR)/output.map 
+	-Map=$(OBJ_DIR)/output.map 
 CFLAGS += $(addprefix -I, $(INCLUDES))
 CFLAGS += $(addprefix -D, $(DEFINES))
 #-------------------------------------------------------------------------------
@@ -40,65 +40,78 @@ CFLAGS += $(addprefix -D, $(DEFINES))
 
 #Linker script
 #-------------------------------------------------------------------------------
-LDSCRIPT   = gcc_arm.ld
+LDSCRIPT   = STM32F103XB_FLASH.ld
 #-------------------------------------------------------------------------------
  
 #Linker config
 #-------------------------------------------------------------------------------
-LDFLAGS += -nostartfiles  -nostdlib -mthumb $(MCU)
+#LDFLAGS += -nostartfiles  -nostdlib -mthumb $(MCU)
+LDFLAGS += -nostartfiles -mthumb $(MCU)
 LDFLAGS += -T $(LDSCRIPT)
-LDFLAGS += --specs=nosys.specs
+LDFLAGS += --specs=nosys.specs 
 #-------------------------------------------------------------------------------
 
 #ASM config
 #-------------------------------------------------------------------------------
-AFLAGS += -Wnls -mapcs
+#AFLAGS += -Wnls -mapcs
+AFLAGS += -mapcs
+AFLAGS += $(addprefix -I, $(INCLUDES))
+AFLAGS += $(addprefix -D, $(DEFINES))
+#-------------------------------------------------------------------------------
+
+#Source files
+#-------------------------------------------------------------------------------
+SRC += $(wildcard  $(SOURCEDIRS)/*.c)
+SRC += $(wildcard  $(SOURCEDIRS)/*.s)
 #-------------------------------------------------------------------------------
 
 #Obj file list
 #-------------------------------------------------------------------------------
-OBJS += $(patsubst %.c, %.o, $(wildcard  $(addsuffix /*.c, $(SOURCEDIRS))))
-OBJS += $(patsubst %.s, %.o, $(wildcard  $(addsuffix /*.s, $(SOURCEDIRS))))
+#OBJS += $(patsubst %.c, %.o, $(wildcard  $(addsuffix /*.c, $(SOURCEDIRS))))
+#OBJS += $(patsubst %.s, %.o, $(wildcard  $(addsuffix /*.s, $(SOURCEDIRS))))
+OBJS += $(SRC:$(SOURCEDIRS)/%.c=$(OBJ_DIR)/%.o)
 #-------------------------------------------------------------------------------
 
-all: $(TARGET).hex $(TARGET).bin $(TARGET).elf
 
-$(TARGET).hex: $(TARGET).elf
-	@$(CP) -O ihex $(TARGET).elf $(TARGET).hex
 
-$(TARGET).bin: $(TARGET).elf
-	@$(CP) -O binary $(TARGET).elf $(TARGET).bin
+all: $(OBJ_DIR)/$(TARGET).hex $(OBJ_DIR)/$(TARGET).bin $(OBJ_DIR)/$(TARGET).elf
 
-$(TARGET).elf: $(OBJS)
+$(OBJ_DIR)/$(TARGET).hex: $(OBJ_DIR)/$(TARGET).elf
+	@$(CP) -O ihex $< $@
+
+$(OBJ_DIR)/$(TARGET).bin: $(OBJ_DIR)/$(TARGET).elf
+	@$(CP) -O binary $< $@
+
+$(OBJ_DIR)/$(TARGET).elf: $(OBJS)
 	@$(LD) $(LDFLAGS) $^ -o $@
 
 
 #Compile Obj files from C
 #-------------------------------------------------------------------------------
-%.o: %.c
+$(OBJ_DIR)/%.o: $(SOURCEDIRS)/%.c
 	@$(CC) $(CFLAGS) -MD -c $< -o $@
 #-------------------------------------------------------------------------------
  
 #Compile Obj files from asm
 #-------------------------------------------------------------------------------
-%.o: %.s
+$(OBJ_DIR)/%.o: $(SOURCEDIRS)/%.s
 	@$(AS) $(AFLAGS) -c $< -o $@
 #-------------------------------------------------------------------------------
 
-# $(OBJECT_DIR)/main: $(OBJS)| $(OBJECT_DIR)
+# $(OBJ_DIR)/main: $(OBJS)| $(OBJ_DIR)
 # 	$(CC) -o $@ $^ $(CFLAGS) $(WARNING)
 
-# #$(OBJS): | $(OBJECT_DIR)
+$(OBJS): | $(OBJ_DIR)
 
-# $(OBJECT_DIR):
-# 	mkdir $@
+$(OBJ_DIR):
+	mkdir $@
 
 
 .PHONY: clean
 
 clean:
 ifeq ($(detected_OS),Windows) 
-	rmdir /s /q $(OBJECT_DIR)
+	rmdir /s /q $(OBJ_DIR)
 else
-	rm -r $(OBJECT_DIR)
+	rm -r $(OBJ_DIR)
 endif

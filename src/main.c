@@ -1,7 +1,6 @@
 //#include <stdio.h>
 //#include <stdint.h>
-#include "core_cm3.h"
-#include "system_ARMCM3.h"
+#include "stm32f1xx.h"
 
 void main(void)
 {
