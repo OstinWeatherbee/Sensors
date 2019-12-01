@@ -8,3 +8,9 @@ void main(void)
 	int c = 1 +2;
 	while(1);
 }
+
+
+void _init(void)
+{
+
+}

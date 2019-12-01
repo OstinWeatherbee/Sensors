@@ -31,8 +31,7 @@ SZ = arm-none-eabi-size
 
 #GCC config
 #-------------------------------------------------------------------------------
-CFLAGS=-I -std=c99 -O2 -Xlinker \
-	-Map=$(OBJ_DIR)/output.map 
+CFLAGS += -I -std=c99 -O2
 CFLAGS += $(addprefix -I, $(INCLUDES))
 CFLAGS += $(addprefix -D, $(DEFINES))
 #-------------------------------------------------------------------------------
@@ -45,10 +44,11 @@ LDSCRIPT   = STM32F103XB_FLASH.ld
  
 #Linker config
 #-------------------------------------------------------------------------------
-#LDFLAGS += -nostartfiles  -nostdlib -mthumb $(MCU)
-LDFLAGS += -nostartfiles -mthumb $(MCU)
+LDFLAGS += -nostartfiles  -nostdlib -mthumb $(MCU)
+#LDFLAGS += -nostartfiles -mthumb $(MCU)
 LDFLAGS += -T $(LDSCRIPT)
-LDFLAGS += --specs=nosys.specs 
+LDFLAGS += --specs=nosys.specs
+LDFLAGS += -Xlinker -Map=$(OBJ_DIR)/output.map
 #-------------------------------------------------------------------------------
 
 #ASM config
