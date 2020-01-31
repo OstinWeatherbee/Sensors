@@ -27,6 +27,7 @@ CC = arm-none-eabi-gcc
 LD = arm-none-eabi-gcc
 CP = arm-none-eabi-objcopy
 SZ = arm-none-eabi-size
+DMP = arm-none-eabi-objdump
 #-------------------------------------------------------------------------------
 
 #GCC config
@@ -46,7 +47,7 @@ LDSCRIPT   = STM32F103XB_FLASH.ld
 #-------------------------------------------------------------------------------
 LDFLAGS += -nostartfiles  -nostdlib -mthumb $(MCU)
 #LDFLAGS += -nostartfiles -mthumb $(MCU)
-LDFLAGS += -T $(LDSCRIPT)
+LDFLAGS += -T $(LDSCRIPT)	#use linker script (aka scatter for ARM compiler)
 LDFLAGS += --specs=nosys.specs
 LDFLAGS += -Xlinker -Map=$(OBJ_DIR)/output.map
 #-------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ $(OBJ_DIR)/$(TARGET).hex: $(OBJ_DIR)/$(TARGET).elf
 	@$(CP) -O ihex $< $@
 
 $(OBJ_DIR)/$(TARGET).bin: $(OBJ_DIR)/$(TARGET).elf
-	@$(CP) -O binary $< $@
+	@$(CP) -O binary -I elf32-littlearm --change-section-address=.data=0x8000000 -S $< $@
 
 $(OBJ_DIR)/$(TARGET).elf: $(OBJS)
 	@$(LD) $(LDFLAGS) $^ -o $@

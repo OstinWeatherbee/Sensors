@@ -1,1 +1,1 @@
-openocd -f "C:\Program Files (x86)\OpenOCD-20191029-0.10.0\share\openocd\scripts\interface\stlink-v2.cfg" -f "C:\Program Files (x86)\OpenOCD-20191029-0.10.0\share\openocd\scripts\target\stm32f1x.cfg" -s "C:\Program Files (x86)\OpenOCD-20191029-0.10.0\share\openocd\scripts"
+openocd -f "C:\Program Files (x86)\OpenOCD-20191029-0.10.0\share\openocd\scripts\interface\stlink.cfg" -f "C:\Program Files (x86)\OpenOCD-20191029-0.10.0\share\openocd\scripts\target\stm32f1x.cfg" -s "C:\Program Files (x86)\OpenOCD-20191029-0.10.0\share\openocd\scripts"
