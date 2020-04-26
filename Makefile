@@ -28,11 +28,14 @@ LD = arm-none-eabi-gcc
 CP = arm-none-eabi-objcopy
 SZ = arm-none-eabi-size
 DMP = arm-none-eabi-objdump
+SF = st-link_cli
 #-------------------------------------------------------------------------------
 
 #GCC config
 #-------------------------------------------------------------------------------
-CFLAGS += -I -std=c99 -O2
+CFLAGS += -mthumb -mthumb-interwork -mcpu=cortex-m3 -mlittle-endian
+CFLAGS += -I -std=c99 -O2 -Wall
+CFLAGS += -ggdb
 CFLAGS += $(addprefix -I, $(INCLUDES))
 CFLAGS += $(addprefix -D, $(DEFINES))
 #-------------------------------------------------------------------------------
@@ -45,7 +48,7 @@ LDSCRIPT   = STM32F103XB_FLASH.ld
  
 #Linker config
 #-------------------------------------------------------------------------------
-LDFLAGS += -nostartfiles  -nostdlib -mthumb $(MCU)
+LDFLAGS += -nostartfiles  -nostdlib
 #LDFLAGS += -nostartfiles -mthumb $(MCU)
 LDFLAGS += -T $(LDSCRIPT)	#use linker script (aka scatter for ARM compiler)
 LDFLAGS += --specs=nosys.specs
@@ -55,7 +58,7 @@ LDFLAGS += -Xlinker -Map=$(OBJ_DIR)/output.map
 #ASM config
 #-------------------------------------------------------------------------------
 #AFLAGS += -Wnls -mapcs
-AFLAGS += -mapcs
+AFLAGS += -mapcs-32
 AFLAGS += $(addprefix -I, $(INCLUDES))
 AFLAGS += $(addprefix -D, $(DEFINES))
 #-------------------------------------------------------------------------------
@@ -74,28 +77,30 @@ OBJS += $(SRC:$(SOURCEDIRS)/%.c=$(OBJ_DIR)/%.o)
 #-------------------------------------------------------------------------------
 
 
-
-all: $(OBJ_DIR)/$(TARGET).hex $(OBJ_DIR)/$(TARGET).bin $(OBJ_DIR)/$(TARGET).elf
-
-$(OBJ_DIR)/$(TARGET).hex: $(OBJ_DIR)/$(TARGET).elf
-	@$(CP) -O ihex $< $@
-
-$(OBJ_DIR)/$(TARGET).bin: $(OBJ_DIR)/$(TARGET).elf
-	@$(CP) -O binary -I elf32-littlearm --change-section-address=.data=0x8000000 -S $< $@
+all: $(OBJ_DIR)/$(TARGET).elf
 
 $(OBJ_DIR)/$(TARGET).elf: $(OBJS)
+	@echo Linking		$@
 	@$(LD) $(LDFLAGS) $^ -o $@
-
+	@echo Create binary	$(OBJ_DIR)/$(TARGET).bin
+	@$(CP) -O binary -I elf32-littlearm $@ $(OBJ_DIR)/$(TARGET).bin
+#$(CP) -O binary -I elf32-littlearm --change-section-address=.data=0x8000000 -S $< $@
+	@echo Create hex	$(OBJ_DIR)/$(TARGET).hex
+	@$(CP) -O ihex $@ $(OBJ_DIR)/$(TARGET).hex
+	@echo Create assembly intermixed with sources	$(OBJ_DIR)/$(TARGET).s
+	@$(DMP) -SD $@ > $(OBJ_DIR)/$(TARGET).s
 
 #Compile Obj files from C
 #-------------------------------------------------------------------------------
 $(OBJ_DIR)/%.o: $(SOURCEDIRS)/%.c
+	@echo Compiling	$<
 	@$(CC) $(CFLAGS) -MD -c $< -o $@
 #-------------------------------------------------------------------------------
  
 #Compile Obj files from asm
 #-------------------------------------------------------------------------------
 $(OBJ_DIR)/%.o: $(SOURCEDIRS)/%.s
+	@echo Compiling	$<
 	@$(AS) $(AFLAGS) -c $< -o $@
 #-------------------------------------------------------------------------------
 
@@ -116,3 +121,11 @@ ifeq ($(detected_OS),Windows)
 else
 	rm -r $(OBJ_DIR)
 endif
+
+flash:
+#Full erase
+	$(SF) -ME
+#Program
+	$(SF) -P $(OBJ_DIR)/$(TARGET).bin 0x8000000
+#Verify
+	$(SF) -V
