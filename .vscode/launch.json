@@ -10,8 +10,8 @@
             "type": "cortex-debug",
             "cwd": "${workspaceRoot}",
             "servertype": "openocd",
-            "executable": "./out/main.bin",
-            //"svdFile": "stm32f1x.cfg",
+            "executable": "./out/sensors.elf",
+            "svdFile": "./scripts/STM32F103xx.svd",
             "configFiles": [
                 "C:/Program Files (x86)/OpenOCD-20191029-0.10.0/share/openocd/scripts/interface/stlink.cfg",
                 "C:/Program Files (x86)/OpenOCD-20191029-0.10.0/share/openocd/scripts/target/stm32f1x.cfg"

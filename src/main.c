@@ -10,10 +10,12 @@ void main(void)
 
     while(1)
     {
-        GPIOC->BSRR = GPIO_BSRR_BR13;		// Сбросили бит.
-        for (int i = 0; i < 8000000; i++);			// Выдержка 600мс
-        GPIOC->BSRR = GPIO_BSRR_BS13;		// Установили бит.
-        for (int i = 0; i < 16000000; i++);			// Выдержка 600мс
+        GPIOC->ODR &= ~GPIO_ODR_ODR13;		// Сбросили бит.
+        for (int i = 0; i < 8000000; i++)
+            asm("nop");			// Выдержка 600мс
+        GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
+        for (int i = 0; i < 16000000; i++)
+            asm("nop");			// Выдержка 600мс
     }
 }
 

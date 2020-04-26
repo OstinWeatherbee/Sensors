@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "vscode_stm32_c_cpp_properties",
+            "compilerPath": "c:\\program files (x86)\\gnu tools arm embedded\\9 2019-q4-major\\bin\\arm-none-eabi-gcc",
+            "includePath": [
+                "${workspaceRoot}/inc/"
+            ],
+            "defines": [
+                "STM32F103"
+            ],
+            "cStandard": "c99",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

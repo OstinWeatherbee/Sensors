@@ -48,6 +48,7 @@ LDSCRIPT   = STM32F103XB_FLASH.ld
  
 #Linker config
 #-------------------------------------------------------------------------------
+LDFLAGS += -mthumb -mthumb-interwork -mcpu=cortex-m3 -mlittle-endian
 LDFLAGS += -nostartfiles  -nostdlib
 #LDFLAGS += -nostartfiles -mthumb $(MCU)
 LDFLAGS += -T $(LDSCRIPT)	#use linker script (aka scatter for ARM compiler)
