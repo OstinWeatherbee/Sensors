@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "stm32f1xx.h"
 
-void main(void)
+int main(void)
 {
     //printf("hi");
     RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN;
@@ -11,12 +11,14 @@ void main(void)
     while(1)
     {
         GPIOC->ODR &= ~GPIO_ODR_ODR13;		// Сбросили бит.
-        for (int i = 0; i < 8000000; i++)
+        for (int i = 0; i < 4000000; i++)
             asm("nop");			// Выдержка 600мс
         GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
-        for (int i = 0; i < 16000000; i++)
+        for (int i = 0; i < 6000000; i++)
             asm("nop");			// Выдержка 600мс
     }
+
+    return 1;
 }
 
 
