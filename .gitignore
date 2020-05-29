@@ -2,3 +2,4 @@
 *~
 out/
 .vscode/.cortex-debug.*.json
+src/FreeRTOS/Source/portable/GCC/
