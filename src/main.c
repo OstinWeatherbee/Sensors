@@ -1,5 +1,6 @@
-#include <stdint.h>
 #include "stm32f1xx.h"
+#include "drv_clocks.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -69,6 +70,8 @@ int main(void)
     GPIOC->CRH	&= ~GPIO_CRH_MODE13;	// Сбрасываем биты CNF для бита 5. Режим 00 - Push-Pull 
     GPIOC->CRH 	|= GPIO_CRH_MODE13_0;	// Выставляем бит MODE0 для пятого пина. Режим MODE01 = Max Speed 10MHz
 
+    drv_clocks_init_sysclk();
+    
     TaskHandle_t xHandle = NULL;
 
     // Create the task without using any dynamic memory allocation.

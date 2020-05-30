@@ -29,7 +29,7 @@
 #ifndef PORTMACRO_H
 #define PORTMACRO_H
 
-#include <stdint.h>
+#include "macro.h"
 #include "FreeRTOS.h"
 
 #ifdef __cplusplus
@@ -161,13 +161,13 @@ not necessary for to use this port.  They are defined so the common demo files
 #endif
 
 /* portNOP() is not required by this port. */
-#define portNOP()   do{ __asm volatile ("nop");}while(0)
+#define portNOP()               NOP()
 
 
-#define portINLINE	__inline
+#define portINLINE              INLINE
 
 #ifndef portFORCE_INLINE
-	#define portFORCE_INLINE inline __attribute__(( always_inline))
+	#define portFORCE_INLINE    FORCE_INLINE
 #endif
 
 /*-----------------------------------------------------------*/
