@@ -8,7 +8,7 @@ your application. */
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
-#define configCPU_CLOCK_HZ                      60000000
+#define configCPU_CLOCK_HZ                      72000000
 #define configTICK_RATE_HZ                      250
 #define configMAX_PRIORITIES                    5
 #define configMINIMAL_STACK_SIZE                128
@@ -90,13 +90,5 @@ your application. */
 #define INCLUDE_xTaskResumeFromISR              1
 
 /* A header file that defines trace macro can be included here. */
-
-
-
-
-#define vPortSVCHandler         SVC_Handler
-#define xPortPendSVHandler      PendSV_Handler
-#define vPortSVCHandler         SVC_Handler
-#define xPortSysTickHandler     SysTick_Handler
 
 #endif /* FREERTOS_CONFIG_H */

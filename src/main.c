@@ -28,9 +28,9 @@ void vTaskCode( void * pvParameters )
     for( ;; )
     {
         GPIOC->ODR &= ~GPIO_ODR_ODR13;		// Сбросили бит.
-        vTaskDelay(500);
+        vTaskDelay(pdMS_TO_TICKS(500));
         GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
-        vTaskDelay(1000);
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

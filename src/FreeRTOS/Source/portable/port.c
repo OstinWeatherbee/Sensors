@@ -30,6 +30,7 @@
  *----------------------------------------------------------*/
 
 /* Scheduler includes. */
+#include "port.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -108,13 +109,6 @@ debugger. */
  * generate the tick interrupt.
  */
 void vPortSetupTimerInterrupt( void );
-
-/*
- * Exception handlers.
- */
-void xPortPendSVHandler( void ) __attribute__ (( naked ));
-void xPortSysTickHandler( void );
-void vPortSVCHandler( void ) __attribute__ (( naked ));
 
 /*
  * Start first task is a separate function so it can be tested in isolation.
