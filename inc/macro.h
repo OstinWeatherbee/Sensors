@@ -26,5 +26,7 @@ typedef uint32_t        BOOL;
 #define INLINE          __inline
 #define FORCE_INLINE    inline __attribute__(( always_inline))
 
+#define KHZ             1000
+#define MHZ             (1000 * KHZ)
 
 #endif  //_MACRO_
