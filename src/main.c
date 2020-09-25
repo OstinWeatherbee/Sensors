@@ -1,5 +1,6 @@
 #include "stm32f1xx.h"
 #include "drv_clocks.h"
+#include "drv_usart.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -31,6 +32,8 @@ void vTaskCode( void * pvParameters )
         vTaskDelay(pdMS_TO_TICKS(500));
         GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
         vTaskDelay(pdMS_TO_TICKS(1000));
+
+        USART1->DR = 'A';
     }
 }
 
@@ -71,6 +74,9 @@ int main(void)
     GPIOC->CRH 	|= GPIO_CRH_MODE13_0;	// Выставляем бит MODE0 для пятого пина. Режим MODE01 = Max Speed 10MHz
 
     drv_clocks_init_sysclk();
+
+    xDrvUsartPortParams_t usart1_params = {DU_USART1, DU_DATA_BITS_8, DU_STOP_BITS_1, DU_NO_PARITY, 115200};
+    drv_usart_init_port(&usart1_params);
     
     TaskHandle_t xHandle = NULL;
 
@@ -87,16 +93,8 @@ int main(void)
     // Start the scheduler.
     vTaskStartScheduler();
 
-    while(1)
-    {
-        // GPIOC->ODR &= ~GPIO_ODR_ODR13;		// Сбросили бит.
-        // for (int i = 0; i < 4000000; i++)
-        //     asm("nop");			// Выдержка 600мс
-        // GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
-        // for (int i = 0; i < 6000000; i++)
-        //     asm("nop");			// Выдержка 600мс
-    }
-
+    while(1);
+    
     return 1;
 }
 

@@ -29,4 +29,6 @@ typedef uint32_t        BOOL;
 #define KHZ             1000
 #define MHZ             (1000 * KHZ)
 
+#define BIT_MASK(x)     ((1 << (x)) - 1)
+
 #endif  //_MACRO_

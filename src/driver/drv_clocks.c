@@ -126,7 +126,7 @@ uint32_t drv_clocks_get_sysclk(void)
  */
 INLINE uint32_t _get_ahb_prescaler(void)
 {
-    uint32_t ahb_prescaler = 0;
+    uint32_t ahb_prescaler = 1;
     uint32_t hpre = (RCC->CFGR & RCC_CFGR_HPRE) >> RCC_CFGR_HPRE_Pos;
 
     if (hpre >= 0x8 && hpre <= 0xB)
