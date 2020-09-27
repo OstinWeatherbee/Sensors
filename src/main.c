@@ -1,6 +1,7 @@
 #include "stm32f1xx.h"
 #include "drv_clocks.h"
 #include "drv_usart.h"
+#include "macro.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -33,7 +34,7 @@ void vTaskCode( void * pvParameters )
         GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
         vTaskDelay(pdMS_TO_TICKS(1000));
 
-        USART1->DR = 'A';
+        DEBUG_PRINT("HELLO!\n");
     }
 }
 

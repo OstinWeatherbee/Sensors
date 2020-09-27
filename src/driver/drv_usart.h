@@ -56,7 +56,38 @@ typedef struct
     uint32_t            baudrate;
 } xDrvUsartPortParams_t;
 
-//result_t drv_usart_init(void);
+/**
+ * @brief USART port initialization
+ * 
+ * @param port_params The parameters to use for port initialization
+ * @return result_t Operation result
+ */
 result_t drv_usart_init_port(xDrvUsartPortParams_t * port_params);
+
+/**
+ * @brief Get the value of USART clk
+ * 
+ * @param usart_no The number of USART port
+ * @return Clock value 
+ */
+uint32_t drv_usart_get_clock(eDrvUsartNum_t usart_no);
+
+/**
+ * @brief Put char function
+ * @todo  Make timeout for the while loop
+ *
+ * @param ch Char to output
+ * @return none 
+ */
+void drv_usart_putc(uint8_t ch);
+
+/**
+ * @brief Put string to the USART Tx line 
+ * 
+ * @param s The pointer to the string
+ * @param len String length
+ * @return Length that was output 
+ */
+int32_t drv_usart_puts(uint8_t *s, uint32_t len);
 
 #endif  //_DRV_USART_

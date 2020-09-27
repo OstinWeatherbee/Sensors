@@ -11,9 +11,9 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include "macro.h"
-
 #define HSE_FREQUENCY   (8 * MHZ)
 #define HSI_FREQUENCY   (8 * MHZ)
+
+#define DEBUG           1
 
 #endif //_CONFIG_H_

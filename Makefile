@@ -57,7 +57,7 @@ all: $(OBJ_DIR)/$(TARGET).elf
 
 $(OBJ_DIR)/$(TARGET).elf: $(OBJS)
 	@echo Linking		$@
-	@$(LD) $(LDFLAGS) $^ -o $@
+	@$(LD) $(LDFLAGS) $^ -o $@ -lm
 	@echo Create binary	$(OBJ_DIR)/$(TARGET).bin
 	@$(CP) -O binary -I elf32-littlearm $@ $(OBJ_DIR)/$(TARGET).bin
 	@echo Create hex	$(OBJ_DIR)/$(TARGET).hex
