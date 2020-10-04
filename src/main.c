@@ -48,11 +48,24 @@ void vGetTemperatureTask( void * pvParameters )
     // pvParameters value in the call to xTaskCreateStatic().
     configASSERT( ( uint32_t ) pvParameters == 1UL );
 
+    static volatile hal_ds18b20_cxt_t sensor_cxt[5];
+    result_t result = hal_ds18b20_init((hal_ds18b20_cxt_t *)sensor_cxt, ARRAY_SIZE(sensor_cxt));
+    DEBUG_PRINT("DS18B20 init result: %d", result);
+
     for( ;; )
     {
         vTaskDelay(pdMS_TO_TICKS(5 *  1000));   //5 min
-        float temp = hal_ds18b20_read_temperature();
-        DEBUG_PRINT("HELLO! temp: %.2f\r\n", temp);
+
+        hal_ds18b20_read_all_temperatures();
+
+        PRINT("Temp:");
+        for(uint8_t i = 0; i < ARRAY_SIZE(sensor_cxt), sensor_cxt[i].rom.qw; i++)
+        {
+            PRINT("\t%d. %.3f; ", i+1, sensor_cxt[i].temperature);
+        }
+        PRINT("\r\n");
+
+        //DEBUG_PRINT("HELLO! temp: %.2f\r\n", temp);
     }
 }
 
@@ -95,10 +108,6 @@ int main(void)
 
     xDrvUsartPortParams_t usart1_params = {DU_USART1, DU_DATA_BITS_8, DU_STOP_BITS_1, DU_NO_PARITY, 115200};
     drv_usart_init_port(&usart1_params);
-    // xDrvUsartPortParams_t usart2_params = {DU_USART2, DU_DATA_BITS_8, DU_STOP_BITS_1, DU_NO_PARITY, 9600};
-    // drv_usart_init_port(&usart2_params);
-    result_t result = hal_ds18b20_search_rom();
-    DEBUG_PRINT("search rom result: %d", result);
 
     TaskHandle_t xHandle = NULL;
 

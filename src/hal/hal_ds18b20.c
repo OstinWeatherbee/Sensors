@@ -11,21 +11,44 @@
 #include "hal_ds18b20.h"
 #include "drv_one_wire.h"
 #include "macro.h"
+#include <string.h>
 
-volatile static xScratchPad_t scratch_pad;
-
-// global search state
-volatile static struct xSearchRomCxt_t
+static struct 
 {
-    uint32_t last_discrepancy;
-    uint32_t last_family_discrepancy;
-    BOOL is_last_device;
-    uint8_t crc8;
-} _search_rom_cxt = {0};
+    hal_ds18b20_cxt_t * ptr; 
+    uint32_t size;
+} _cxt;
+
+/**
+ * @brief Initialisation of the sensors' context, interface and obtaining of 
+ *      devices' ROM
+ * 
+ * @param cxt[in/out] Pointer to the context we should initialize with found devices
+ * @param size[in] The size of array of the context
+ * @return result_t RESULT_OK if initialization succeed
+ */
+result_t hal_ds18b20_init(hal_ds18b20_cxt_t * cxt, uint32_t size)
+{
+    result_t result = RESULT_OK;
+
+    if (!cxt || !size)
+    {
+        result = RESULT_FAIL;
+    }
+    else
+    {
+        _cxt.ptr =  cxt;
+        _cxt.size = size; 
+        memset((void*)cxt, 0, sizeof(hal_ds18b20_cxt_t) * size);
+        result = hal_ds18b20_search_rom();
+    }
+
+    return result;
+}
 
 
-// TEST BUILD
-static unsigned char dscrc_table[] = {
+
+static uint8_t crc_table[] = {
         0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,
       157,195, 33,127,252,162, 64, 30, 95,  1,227,189, 62, 96,130,220,
        35,125,159,193, 66, 28,254,160,225,191, 93,  3,128,222, 60, 98,
@@ -43,34 +66,41 @@ static unsigned char dscrc_table[] = {
       233,183, 85, 11,136,214, 52,106, 43,117,151,201, 74, 20,246,168,
       116, 42,200,150, 21, 75,169,247,182,232, 10, 84,215,137,107, 53};
 
-//--------------------------------------------------------------------------
-// Calculate the CRC8 of the byte value provided with the current 
-// global 'crc8' value. 
-// Returns current global crc8 value
-//
-unsigned char docrc8(unsigned char value)
-{
-   // See Application Note 27
-   
-   // TEST BUILD
-   _search_rom_cxt.crc8 = dscrc_table[_search_rom_cxt.crc8 ^ value];
-   return _search_rom_cxt.crc8;
-}
 
-static void _reset_search_rom_cxt(void);
-static result_t _search_one_rom(volatile uint64_t * rom);
-
-volatile static xRomType_t rom[5];
-result_t hal_ds18b20_search_rom(void)
+/**
+ * @brief Calculate crc8 for DS18B20 sensor
+ * 
+ * @param message[in] Pointer to the data to check
+ * @param length[in] Data length
+ * @return uint8_t The calculated value
+ */
+static uint8_t _calculate_crc8(uint8_t const * message, uint32_t length)
 {
-    uint8_t i = 0;
-    while (_search_one_rom(&rom[i].qw) == RESULT_SUCCESS)
+    uint8_t data;
+    uint8_t remainder = 0;
+
+    for (int byte = 0; byte < length; ++byte)
     {
-        DEBUG_PRINT("Found: 0x%08x%08x", UPPER32(rom[i].qw), LOWER32(rom[i].qw));
+        data = message[byte] ^ remainder;
+        remainder = crc_table[data] ^ (remainder << 8);
     }
-    return RESULT_OK;
+
+    return remainder;
 }
 
+// rom search state
+volatile static struct xSearchRomCxt_t
+{
+    uint32_t last_discrepancy;
+    uint32_t last_family_discrepancy;
+    BOOL is_last_device;
+    uint8_t crc8;
+} _search_rom_cxt = {0};
+
+/**
+ * @brief Reset ROM search context
+ * 
+ */
 static void _reset_search_rom_cxt(void)
 {
     _search_rom_cxt.last_discrepancy = 0;
@@ -79,6 +109,12 @@ static void _reset_search_rom_cxt(void)
     _search_rom_cxt.crc8 = 0;
 }
 
+/**
+ * @brief Search ROM of one device
+ * 
+ * @param rom[out] The pointer to the ROM storage
+ * @return result_t RESULT_OK if we found one more ROM
+ */
 static result_t _search_one_rom( volatile uint64_t * rom)
 {
    volatile uint8_t id_bit_number = 0;
@@ -193,12 +229,11 @@ static result_t _search_one_rom( volatile uint64_t * rom)
             search_result = RESULT_SUCCESS;
         }
 
-        // // if the search was successful then
-        // if (crc8 == 0)
-        // {
-        //     search_result = RESULT_SUCCESS;
-        // }
-        //search_result = RESULT_SUCCESS;
+        // if the search was successful then
+        if (_calculate_crc8((uint8_t *) rom, sizeof(uint64_t)) == 0)
+        {
+            search_result = RESULT_SUCCESS;
+        }
     }
 
     // if no device found then reset counters so next 'search' will be like a first
@@ -210,7 +245,57 @@ static result_t _search_one_rom( volatile uint64_t * rom)
    return search_result;
 }
 
+/**
+ * @brief This function obtains ROM code of all devices on the 1-Wire line
+ * 
+ * @return result_t RESULT_OK if we found all devices without troubles
+ */
+result_t hal_ds18b20_search_rom(void)
+{
+    uint8_t i = 0;
+    while (_search_one_rom(&_cxt.ptr[i].rom.qw) == RESULT_SUCCESS && i < _cxt.size)
+    {
+        DEBUG_PRINT("Found: 0x%08x%08x", UPPER32(_cxt.ptr[i].rom.qw), LOWER32(_cxt.ptr[i].rom.qw));
+        i++;
+    }
+    return RESULT_OK;
+}
 
+/**
+ * @brief We can read ROM in case if we have only one device on the line
+ * 
+ * @param rom[out] Sensor's ROM 
+ * @return result_t RESULT_OK if we succeed to get ROM
+ */
+result_t hal_ds18b20_read_rom(hal_ds18b20_rom_t * rom) 
+{
+    drv_one_wire_reset();
+    drv_one_wire_write_byte(CMD_READ_ROM);
+    drv_one_wire_read_data((uint8_t *) rom, sizeof(uint64_t));
+    return RESULT_OK;
+}
+
+/**
+ * @brief Before we send any command to the sensor we should choose it
+ *      by this command
+ * 
+ * @param rom[in] Sensor's ROM
+ * @return result_t RESULT_OK if the command was sent successfully
+ */
+result_t hal_ds18b20_match_rom(hal_ds18b20_rom_t * rom) 
+{
+    drv_one_wire_reset();
+    drv_one_wire_write_byte(CMD_MATCH_ROM);
+    drv_one_wire_write_data((uint8_t *) rom, sizeof(uint64_t));
+    return RESULT_OK;
+}
+
+/**
+ * @brief Skip ROM command allows to send broadcast commands or to save time
+ *      for the command in case  we have only one device on the line
+ * 
+ * @return result_t RESULT_OK if the command was sent successfully
+ */
 result_t hal_ds18b20_skip_rom(void) 
 {
     drv_one_wire_reset();
@@ -218,24 +303,6 @@ result_t hal_ds18b20_skip_rom(void)
     return RESULT_OK;
 }
 
-// result_t drv_one_wire_read_rom(RomType *addr) {
-//     OW_UART_Reset();
-//     OW_UART_Write_Byte(CMD_READ_ROM);
-//     OW_UART_Read_Data((uint8_t *)addr, 9);
-//     OW_UART_Reset();
-    
-//     if (Check_CRC8((*addr).b,9)) 
-//         return OK;
-//     else 
-//         return FAULT;
-// }
-
-
-// void OW_UART_Read_Voltage(void) {
-//     OW_UART_Convert_Voltage();
-//     OW_UART_Recall_Memory(0);
-//     OW_UART_Read_Scratch(0);
-// }
 
 void hal_ds18b20_recall_memory(uint8_t page) 
 {
@@ -244,35 +311,109 @@ void hal_ds18b20_recall_memory(uint8_t page)
     drv_one_wire_write_byte(page);
 }
 
-result_t hal_ds18b20_read_scratch(uint8_t page)
+/**
+ * @brief Reads scratch pad of the sensor
+ * 
+ * @param rom[in] The device's ROM
+ * @param scratch[out] The struct where to store scratch pad values
+ * @param page[in] The number of scratch pad page 
+ * @return result_t RESULT_OK if we read out successfully
+ */
+result_t hal_ds18b20_read_scratch(hal_ds18b20_rom_t * rom, hal_ds18b20_scratch_pad_t * scratch, uint8_t page)
 {
     result_t res = RESULT_OK;
-    hal_ds18b20_skip_rom();
+    hal_ds18b20_match_rom(rom);
     drv_one_wire_write_byte(CMD_READ_SCRATCHPAD);
-    drv_one_wire_read_data((uint8_t *)(&(scratch_pad.page_0) + page), 9);
+    drv_one_wire_read_data((uint8_t *)(&(scratch->page_0) + page), 9);
     
-    // if (!Check_CRC8((uint8_t *)(&(scratch_pad.Page0) + page),9)) 
-    // {
-    //     res = RESULT_FAIL;
-    // }
+    if (_calculate_crc8((uint8_t *)(&(scratch->page_0) + page),9) != 0) 
+    {
+        res = RESULT_FAIL;
+    }
     
     return res;
 }
 
-void hal_ds18b20_convert_temperature(void) 
+/**
+ * @brief Convert temperature function sends the command and waits till conversion ends
+ * 
+ * @param rom[in] The device we should start conversion
+ * @return result_t RESULT_OK if conversion finished successfully
+ */
+result_t hal_ds18b20_convert_temperature(hal_ds18b20_rom_t * rom) 
 {
-    hal_ds18b20_skip_rom();
+    result_t result;
+    if (rom->qw == DS18B20_BROADCAST_ROM)
+    {
+        result = hal_ds18b20_skip_rom();
+    }
+    else
+    {
+        result = hal_ds18b20_match_rom(rom);
+    }
+    
     drv_one_wire_write_byte(CMD_CONVERT_TEMPERATURE);
     while(!drv_one_wire_read_bit());
+
+    return result;
 }
 
-float hal_ds18b20_read_temperature(void) 
+/**
+ * @brief Read temperature from the one sensor with matching ROM
+ * 
+ * @param rom[in] Sensors ROM
+ * @param temperature[out] Temperature value
+ * @return result_t RESULT_OK if temperature was read out
+ */
+result_t hal_ds18b20_read_temperature(hal_ds18b20_rom_t * rom, float * temperature) 
 {
-    hal_ds18b20_convert_temperature();
-    //hal_ds18b20_recall_memory(0);
-    hal_ds18b20_read_scratch(0);
+    result_t result = RESULT_OK;
+    volatile static hal_ds18b20_scratch_pad_t scratch;
 
+    result = hal_ds18b20_convert_temperature(rom);
+    if (result != RESULT_OK)
+    {
+        return result;
+    }
+
+    result = hal_ds18b20_read_scratch(rom, (hal_ds18b20_scratch_pad_t *)&scratch, 0);
+    if (result != RESULT_OK)
+    {
+        return result;
+    }
+
+    *temperature = (float)(scratch.page_0.temp_msb << 4 | scratch.page_0.temp_lsb >> 4) + (scratch.page_0.temp_lsb & 0xF) * 0.0625;
     
-    float temp = (float)(scratch_pad.page_0.temp_msb << 4 | scratch_pad.page_0.temp_lsb >> 4) + (scratch_pad.page_0.temp_lsb & 0xF) * 0.0625;
-    return temp;
+    return result;
+}
+
+/**
+ * @brief Read out temperature values from all sensors connected to the 1-Wire interface
+ * 
+ * @return result_t RESULT_OK if all temperatures were read out
+ */
+result_t hal_ds18b20_read_all_temperatures(void)
+{
+    for (uint8_t i = 0; i < _cxt.size; i++)
+    {
+        if (_cxt.ptr[i].rom.qw)
+        {
+            float temp;
+            if (hal_ds18b20_read_temperature((hal_ds18b20_rom_t *)&_cxt.ptr[i].rom, &temp) == RESULT_OK)
+            {
+                _cxt.ptr[i].temperature = temp;
+            }
+            else
+            {
+                _cxt.ptr[i].temperature = -273.0;
+            }
+        }
+        else
+        {
+            break;
+        }
+        
+    }
+
+    return RESULT_OK;
 }

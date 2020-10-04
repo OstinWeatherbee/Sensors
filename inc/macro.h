@@ -37,6 +37,8 @@ typedef uint32_t        BOOL;
 #define UPPER32(x)  ((uint32_t)((x)>>32))
 #define LOWER32(x)  ((uint32_t)(x))
 
+#define ARRAY_SIZE(x)   (sizeof(x)/sizeof(x[0]))
+
 #define KB(x)   ((x)<<10)
 #define MB(x)   ((x)<<20)
 
