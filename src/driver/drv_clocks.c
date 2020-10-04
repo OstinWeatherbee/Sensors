@@ -33,7 +33,8 @@ BOOL drv_clocks_init_sysclk(void)
 
     //Turn off AHB prescaler
     RCC->CFGR &= ~RCC_CFGR_HPRE_3;  
-
+    RCC->CFGR |= RCC_CFGR_PPRE1_DIV2; //devide HCLK by 2
+    
     // Connect PLL output to system clock and wait while ready
     RCC->CFGR &= ~RCC_CFGR_SW_0;
     RCC->CFGR |= RCC_CFGR_SW_1;
@@ -234,7 +235,10 @@ uint32_t drv_clocks_get_cortex_system_timer(void)
  */
 uint32_t drv_clocks_get_pclk1(void)
 {
-    return drv_clocks_get_hclk() / _get_apb1_prescaler();
+    volatile uint32_t pclk1 = drv_clocks_get_hclk() / _get_apb1_prescaler();
+    ASSERT("PCLK1 too high. Set prescaler", pclk1 <= 36 * MHZ);
+
+    return pclk1;
 }
 
 /**

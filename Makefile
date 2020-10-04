@@ -22,13 +22,16 @@ DMP = arm-none-eabi-objdump
 SF = st-link_cli
 #-------------------------------------------------------------------------------
 
+rootdir = $(realpath .)
+
 #GCC config
 #-------------------------------------------------------------------------------
 CFLAGS += -mthumb -mthumb-interwork -mcpu=cortex-m3 -mlittle-endian
-CFLAGS += -I -std=c99 -O2 -Wall
+CFLAGS += -I -std=c99 -O2 -Wall -Wno-switch
 CFLAGS += -ggdb
 CFLAGS += $(addprefix -I, $(INCLUDES))
 CFLAGS += $(addprefix -D, $(DEFINES))
+CFLAGS += -MMD -MP # used to generate the header dependencies automatically. it's used to trigger a compilation when only a header changes 
 #-------------------------------------------------------------------------------
 
 
@@ -53,6 +56,7 @@ AFLAGS += -mapcs-32
 AFLAGS += $(addprefix -I, $(INCLUDES))
 #-------------------------------------------------------------------------------
 
+.PHONY: all
 all: $(OBJ_DIR)/$(TARGET).elf
 
 $(OBJ_DIR)/$(TARGET).elf: $(OBJS)

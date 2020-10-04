@@ -6,6 +6,7 @@ INCLUDES += src/driver
 INCLUDES += src/FreeRTOS/Source/include
 INCLUDES += src/FreeRTOS/Source/portable
 INCLUDES += src/utils
+INCLUDES += src/hal
 #-------------------------------------------------------------------------------
 
 #Source files
@@ -15,7 +16,8 @@ SRC += \
 	src/driver \
 	src/FreeRTOS/Source \
 	src/FreeRTOS/Source/portable \
-	src/utils
+	src/utils \
+	src/hal
 
 SRC_EXCLUDE += \
 	src/FreeRTOS/Source/portable/heap_1.c \

@@ -203,7 +203,7 @@ int32_t mini_printf(const uint8_t *fmt, ...)
     {
         if (ch!='%')
         {
-            drv_usart_putc(ch);
+            drv_usart_putc(DU_USART1, ch);
         }
         else 
         {
@@ -318,38 +318,38 @@ int32_t mini_printf(const uint8_t *fmt, ...)
                 case 'u':
                 case 'd':
                     len = mini_itoa(va_arg(arglist, unsigned int), 10, 0, (ch=='u'), bf, width);
-                    drv_usart_puts(bf, len);
+                    drv_usart_puts(DU_USART1, bf, len);
                     break;
 
                 case 'x':
                 case 'X':
                     len = mini_itoa(va_arg(arglist, unsigned int), 16, (ch=='X'), 1, bf, width);
-                    drv_usart_puts(bf, len);
+                    drv_usart_puts(DU_USART1, bf, len);
                     break;
 
                 case 'c' :
-                    drv_usart_putc((char)(va_arg(arglist, int)));
+                    drv_usart_putc(DU_USART1, (char)(va_arg(arglist, int)));
                     break;
 
                 case 's' :
                     ptr = va_arg(arglist, uint8_t *);
-                    drv_usart_puts(ptr, mini_strlen(ptr));
+                    drv_usart_puts(DU_USART1, ptr, mini_strlen(ptr));
                     break;
 
                 case 'f' :
                 case 'F' :
                     len = mini_ftoa(va_arg(arglist, double), (ch=='F'), bf, width, precision, is_zero_pad);
-                    drv_usart_puts(bf, len);
+                    drv_usart_puts(DU_USART1, bf, len);
                     break;
 
                 case 'e' :
                 case 'E' :
                     len = mini_ftoa(va_arg(arglist, double), (ch=='E'), bf, width, precision, is_zero_pad);
-                    drv_usart_puts(bf, len);
+                    drv_usart_puts(DU_USART1, bf, len);
                     break;
 
                 default:
-                    drv_usart_putc(ch);
+                    drv_usart_putc(DU_USART1, ch);
                     break;
             }
         }

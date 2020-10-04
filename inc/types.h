@@ -14,7 +14,8 @@ typedef enum
 {
     RESULT_OK = 1,
     RESULT_SUCCESS,
-    RESULT_FAIL
+    RESULT_FAIL,
+    RESULT_NOTHING
 } result_t;
 
 #endif //_TYPES_H_

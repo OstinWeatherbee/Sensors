@@ -34,20 +34,23 @@ typedef uint32_t        BOOL;
 #define MAX(a,b)    ((a)>(b) ? (a) : (b))
 #define MIN(a,b)    ((a)<(b) ? (a) : (b))
 
+#define UPPER32(x)  ((uint32_t)((x)>>32))
+#define LOWER32(x)  ((uint32_t)(x))
+
 #define KB(x)   ((x)<<10)
 #define MB(x)   ((x)<<20)
 
 #define BIT_MASK(x)     ((1 << (x)) - 1)
 
+#define PRINT(fmt, ...)     do { printf((uint8_t*)(fmt), ##__VA_ARGS__); } while (0)
 
 #if defined VERBOSE || NDEBUG
     #define DEBUG_PRINT(fmt, ...)       
 #elif defined DEBUG
-    #define DEBUG_PRINT(fmt, ...) \
-        do { printf((uint8_t*)(fmt), ##__VA_ARGS__); } while (0)
+    #define DEBUG_PRINT(fmt, ...)   PRINT(fmt"\r\n", ##__VA_ARGS__)
 #endif
 
-#define ASSERT_PRINT(x) DEBUG_PRINT("[%s](%s) x\n", __FILE__, __LINE__)
+#define ASSERT_PRINT(x) DEBUG_PRINT("[%s](%d): "x, __FILE__, __LINE__)
 #define ASSERT(message, assertion) do { if (!(assertion)) { \
             ASSERT_PRINT(message); while(1);}} while(0)
 

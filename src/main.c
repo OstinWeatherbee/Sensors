@@ -1,6 +1,7 @@
 #include "stm32f1xx.h"
 #include "drv_clocks.h"
 #include "drv_usart.h"
+#include "hal_ds18b20.h"
 #include "macro.h"
 
 #include "FreeRTOS.h"
@@ -20,6 +21,10 @@ StaticTask_t xTaskBuffer;
 // the RTOS port.
 StackType_t xStack[ STACK_SIZE ];
 
+
+StaticTask_t xGetTemperatureTaskBuffer;
+StackType_t xGetTemperatureTaskStack[ STACK_SIZE ];
+
 // Function that implements the task being created.
 void vTaskCode( void * pvParameters )
 {
@@ -33,11 +38,23 @@ void vTaskCode( void * pvParameters )
         vTaskDelay(pdMS_TO_TICKS(500));
         GPIOC->ODR |= GPIO_ODR_ODR13;		// Установили бит.
         vTaskDelay(pdMS_TO_TICKS(1000));
-
-        DEBUG_PRINT("HELLO!\n");
     }
 }
 
+// Function that implements the task being created.
+void vGetTemperatureTask( void * pvParameters )
+{
+    // The parameter value is expected to be 1 as 1 is passed in the
+    // pvParameters value in the call to xTaskCreateStatic().
+    configASSERT( ( uint32_t ) pvParameters == 1UL );
+
+    for( ;; )
+    {
+        vTaskDelay(pdMS_TO_TICKS(5 *  1000));   //5 min
+        float temp = hal_ds18b20_read_temperature();
+        DEBUG_PRINT("HELLO! temp: %.2f\r\n", temp);
+    }
+}
 
 /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
 implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
@@ -78,7 +95,11 @@ int main(void)
 
     xDrvUsartPortParams_t usart1_params = {DU_USART1, DU_DATA_BITS_8, DU_STOP_BITS_1, DU_NO_PARITY, 115200};
     drv_usart_init_port(&usart1_params);
-    
+    // xDrvUsartPortParams_t usart2_params = {DU_USART2, DU_DATA_BITS_8, DU_STOP_BITS_1, DU_NO_PARITY, 9600};
+    // drv_usart_init_port(&usart2_params);
+    result_t result = hal_ds18b20_search_rom();
+    DEBUG_PRINT("search rom result: %d", result);
+
     TaskHandle_t xHandle = NULL;
 
     // Create the task without using any dynamic memory allocation.
@@ -90,6 +111,15 @@ int main(void)
                     1,               // Priority at which the task is created.
                     xStack,          // Array to use as the task's stack.
                     &xTaskBuffer );  // Variable to hold the task's data structure.
+
+    xTaskCreateStatic(
+                    vGetTemperatureTask,       // Function that implements the task.
+                    "TEMP",          // Text name for the task.
+                    STACK_SIZE,      // Stack size in words, not bytes.
+                    ( void * ) 1,    // Parameter passed into the task.
+                    2,               // Priority at which the task is created.
+                    xGetTemperatureTaskStack,          // Array to use as the task's stack.
+                    &xGetTemperatureTaskBuffer );  // Variable to hold the task's data structure.
 
     // Start the scheduler.
     vTaskStartScheduler();

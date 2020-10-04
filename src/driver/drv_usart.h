@@ -13,14 +13,13 @@
 
 #include "types.h"
 #include "stm32f103xb.h"
+#include "macro.h"
 
 typedef enum
 {
     DU_USART1,
     DU_USART2,
     DU_USART3,
-    DU_USART4,
-    DU_USART5,
 
     DU_USART_NUM
 } eDrvUsartNum_t;
@@ -57,6 +56,14 @@ typedef struct
 } xDrvUsartPortParams_t;
 
 /**
+ * @brief Get USART Rx line status for new bytes
+ * 
+ * @param usart_no The number of USART port
+ * @return uint32_t  1 if we have byte come
+ */
+uint32_t drv_usart_get_rx_status(eDrvUsartNum_t usart_no);
+
+/**
  * @brief USART port initialization
  * 
  * @param port_params The parameters to use for port initialization
@@ -79,7 +86,7 @@ uint32_t drv_usart_get_clock(eDrvUsartNum_t usart_no);
  * @param ch Char to output
  * @return none 
  */
-void drv_usart_putc(uint8_t ch);
+void drv_usart_putc(eDrvUsartNum_t usart_no, uint8_t ch);
 
 /**
  * @brief Put string to the USART Tx line 
@@ -88,6 +95,15 @@ void drv_usart_putc(uint8_t ch);
  * @param len String length
  * @return Length that was output 
  */
-int32_t drv_usart_puts(uint8_t *s, uint32_t len);
+int32_t drv_usart_puts(eDrvUsartNum_t usart_no, uint8_t *s, uint32_t len);
+
+/**
+ * @brief Get char
+ * 
+ * @param usart_no Number of USART port that we should use to obtain byte
+ * @param ch Pointer to the variable where to store the symbol
+ * @return result_t The result of operation
+ */
+result_t drv_usart_getc(eDrvUsartNum_t usart_no, uint8_t * ch);
 
 #endif  //_DRV_USART_
