@@ -77,7 +77,7 @@ static uint32_t mini_strlen(const uint8_t *s)
 }
 
 static uint32_t mini_itoa(int32_t value, uint32_t radix, uint32_t uppercase, uint32_t unsig,
-     uint8_t *buffer, uint32_t zero_pad)
+     uint8_t *buffer, uint32_t zero_pad, uint32_t force_sign)
 {
     uint8_t    *pbuffer = buffer;
     int32_t    negative = 0;
@@ -104,6 +104,8 @@ static uint32_t mini_itoa(int32_t value, uint32_t radix, uint32_t uppercase, uin
 
     if (negative)
         *(pbuffer++) = '-';
+    else if (!negative && force_sign)
+        *(pbuffer++) = '+';
 
     *(pbuffer) = '\0';
 
@@ -120,7 +122,7 @@ static uint32_t mini_itoa(int32_t value, uint32_t radix, uint32_t uppercase, uin
 }
 
 
-static uint32_t mini_ftoa(float value, uint32_t uppercase, uint8_t *buffer, uint32_t width, uint32_t precision, uint8_t is_zero_pad)
+static uint32_t mini_ftoa(float value, uint32_t uppercase, uint8_t *buffer, uint32_t width, uint32_t precision, uint8_t is_zero_pad, uint32_t force_sign)
 {
     uint8_t    *pbuffer = buffer;
     int32_t    i, len, negative = 0;
@@ -172,6 +174,8 @@ static uint32_t mini_ftoa(float value, uint32_t uppercase, uint8_t *buffer, uint
 
     if (negative)
         *(pbuffer++) = '-';
+    else if (!negative && force_sign)
+        *(pbuffer++) = '+';
 
     *(pbuffer) = '\0';
 
@@ -208,7 +212,7 @@ int32_t mini_printf(const uint8_t *fmt, ...)
         else 
         {
             BOOL is_zero_pad = FALSE;
-            //volatile BOOL is_force_positive = FALSE;
+            BOOL is_force_positive = FALSE;
             uint32_t width = 0;
             uint32_t precision = 0;
             uint8_t *ptr;
@@ -231,7 +235,7 @@ int32_t mini_printf(const uint8_t *fmt, ...)
                 case '-':
                     break;
                 case '+':
-                    //is_force_positive = TRUE;
+                    is_force_positive = TRUE;
                     break;
                 case '#':
                     break;
@@ -317,13 +321,13 @@ int32_t mini_printf(const uint8_t *fmt, ...)
 
                 case 'u':
                 case 'd':
-                    len = mini_itoa(va_arg(arglist, unsigned int), 10, 0, (ch=='u'), bf, width);
+                    len = mini_itoa(va_arg(arglist, unsigned int), 10, 0, (ch=='u'), bf, width, is_force_positive);
                     drv_usart_puts(DU_USART1, bf, len);
                     break;
 
                 case 'x':
                 case 'X':
-                    len = mini_itoa(va_arg(arglist, unsigned int), 16, (ch=='X'), 1, bf, width);
+                    len = mini_itoa(va_arg(arglist, unsigned int), 16, (ch=='X'), 1, bf, width, is_force_positive);
                     drv_usart_puts(DU_USART1, bf, len);
                     break;
 
@@ -338,13 +342,13 @@ int32_t mini_printf(const uint8_t *fmt, ...)
 
                 case 'f' :
                 case 'F' :
-                    len = mini_ftoa(va_arg(arglist, double), (ch=='F'), bf, width, precision, is_zero_pad);
+                    len = mini_ftoa(va_arg(arglist, double), (ch=='F'), bf, width, precision, is_zero_pad, is_force_positive);
                     drv_usart_puts(DU_USART1, bf, len);
                     break;
 
                 case 'e' :
                 case 'E' :
-                    len = mini_ftoa(va_arg(arglist, double), (ch=='E'), bf, width, precision, is_zero_pad);
+                    len = mini_ftoa(va_arg(arglist, double), (ch=='E'), bf, width, precision, is_zero_pad, is_force_positive);
                     drv_usart_puts(DU_USART1, bf, len);
                     break;
 
@@ -383,7 +387,7 @@ int32_t mini_vsnprintf(uint8_t *buffer, uint32_t buffer_len, const uint8_t *fmt,
         else 
         {
             BOOL is_zero_pad = FALSE;
-            //volatile BOOL is_force_positive = FALSE;
+            BOOL is_force_positive = FALSE;
             uint32_t width = 0;
             uint32_t precision = 0;
             uint8_t *ptr;
@@ -406,7 +410,7 @@ int32_t mini_vsnprintf(uint8_t *buffer, uint32_t buffer_len, const uint8_t *fmt,
                 case '-':
                     break;
                 case '+':
-                    //is_force_positive = TRUE;
+                    is_force_positive = TRUE;
                     break;
                 case '#':
                     break;
@@ -487,14 +491,14 @@ int32_t mini_vsnprintf(uint8_t *buffer, uint32_t buffer_len, const uint8_t *fmt,
 
                 case 'u':
                 case 'd':
-                    len = mini_itoa(va_arg(va, unsigned int), 10, 0, (ch=='u'), bf, width);
+                    len = mini_itoa(va_arg(va, unsigned int), 10, 0, (ch=='u'), bf, width, is_force_positive);
                     mini_puts(bf, len, buffer);
                     buffer += len;
                     break;
 
                 case 'x':
                 case 'X':
-                    len = mini_itoa(va_arg(va, unsigned int), 16, (ch=='X'), 1, bf, width);
+                    len = mini_itoa(va_arg(va, unsigned int), 16, (ch=='X'), 1, bf, width, is_force_positive);
                     mini_puts(bf, len, buffer);
                     buffer += len;
                     break;
@@ -511,14 +515,14 @@ int32_t mini_vsnprintf(uint8_t *buffer, uint32_t buffer_len, const uint8_t *fmt,
 
                 case 'f' :
                 case 'F' :
-                    len = mini_ftoa(va_arg(va, double), (ch=='F'), bf, width, precision, is_zero_pad);
+                    len = mini_ftoa(va_arg(va, double), (ch=='F'), bf, width, precision, is_zero_pad, is_force_positive);
                     mini_puts(bf, len, buffer);
                     buffer += len;
                     break;
 
                 case 'e' :
                 case 'E' :
-                    len = mini_ftoa(va_arg(va, double), (ch=='E'), bf, width, precision, is_zero_pad);
+                    len = mini_ftoa(va_arg(va, double), (ch=='E'), bf, width, precision, is_zero_pad, is_force_positive);
                     mini_puts(bf, len, buffer);
                     buffer += len;
                     break;

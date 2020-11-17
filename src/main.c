@@ -61,7 +61,7 @@ void vGetTemperatureTask( void * pvParameters )
         PRINT("Temp:");
         for(uint8_t i = 0; i < ARRAY_SIZE(sensor_cxt), sensor_cxt[i].rom.qw; i++)
         {
-            PRINT("\t%d. %.3f; ", i+1, sensor_cxt[i].temperature);
+            PRINT("\t%d. %+.3f; ", i+1, sensor_cxt[i].temperature);
         }
         PRINT("\r\n");
 

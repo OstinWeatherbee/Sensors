@@ -12,6 +12,7 @@
 #include "drv_one_wire.h"
 #include "macro.h"
 #include <string.h>
+#include <stdlib.h>
 
 static struct 
 {
@@ -382,8 +383,11 @@ result_t hal_ds18b20_read_temperature(hal_ds18b20_rom_t * rom, float * temperatu
         return result;
     }
 
-    *temperature = (float)(scratch.page_0.temp_msb << 4 | scratch.page_0.temp_lsb >> 4) + (scratch.page_0.temp_lsb & 0xF) * 0.0625;
-    
+    int32_t sign = scratch.page_0.temp_msb & 0x8 ? 0xFFFF<<16 : 0;
+    volatile int32_t int_part = (int32_t)(scratch.page_0.temp_msb << 8 | scratch.page_0.temp_lsb);
+    int_part |= sign;
+    *temperature = int_part / 16.0;
+
     return result;
 }
 
@@ -398,8 +402,8 @@ result_t hal_ds18b20_read_all_temperatures(void)
     {
         if (_cxt.ptr[i].rom.qw)
         {
-            float temp;
-            if (hal_ds18b20_read_temperature((hal_ds18b20_rom_t *)&_cxt.ptr[i].rom, &temp) == RESULT_OK)
+            volatile float temp;
+            if (hal_ds18b20_read_temperature((hal_ds18b20_rom_t *)&_cxt.ptr[i].rom, (float *)&temp) == RESULT_OK)
             {
                 _cxt.ptr[i].temperature = temp;
             }
